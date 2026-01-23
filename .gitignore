@@ -1,5 +1,22 @@
+# OS Junk
 .DS_Store
+Thumbs.db
+
+# KiCad Temporary & Backup Files
 *.lck
 *.bkp
-fp-info-cache
+*.bak
 *_autosave*
+fp-info-cache
+*-backups/
+*.kicad_pcb-bak
+
+# KiCad Local Settings (UI preferences)
+*.kicad_prl
+
+# Generated Output Files (Artifacts)
+*.gbr
+*.drl
+*.pos
+*.rpt
+*-job.gbrjob
