@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "teensy.pretty-master")(type "KiCad")(uri "/Users/joseph/Documents/Project_Prometheus/00_Libraries/teensy.pretty-master")(options "")(descr ""))
+  (lib (name "XT30PW-M")(type "KiCad")(uri "/Users/joseph/Documents/Project_Prometheus/00_Libraries/XT30PW-M")(options "")(descr ""))
+)
