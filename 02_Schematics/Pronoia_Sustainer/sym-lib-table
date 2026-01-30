@@ -1,5 +1,0 @@
-(sym_lib_table
-  (version 7)
-  (lib (name "teensy")(type "KiCad")(uri "/Users/joseph/Documents/Project_Prometheus/00_Libraries/teensy.kicad_sym")(options "")(descr ""))
-  (lib (name "XT30PW-M")(type "KiCad")(uri "/Users/joseph/Documents/Project_Prometheus/00_Libraries/XT30PW-M/XT30PW-M.kicad_sym")(options "")(descr ""))
-)

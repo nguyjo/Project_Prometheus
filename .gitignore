@@ -3,20 +3,35 @@
 Thumbs.db
 
 # KiCad Temporary & Backup Files
-*.lck
+*.lck               # Lock files (prevents opening read-only)
 *.bkp
 *.bak
 *_autosave*
-fp-info-cache
+fp-info-cache       # Footprint cache
 *-backups/
 *.kicad_pcb-bak
-
-# KiCad Local Settings (UI preferences)
-*.kicad_prl
+*.kicad_prl         # Local panel settings (user preference)
 
 # Generated Output Files (Artifacts)
+# force add these files into PRODUCTION after KiCAD is finished, not into KiCAD project folder
 *.gbr
 *.drl
 *.pos
 *.rpt
 *-job.gbrjob
+
+# --- LTSpice Ignores ---
+*.raw               # MASSIVE wave data files (Do not upload!)
+*.log               # Simulation logs
+*.net               # Generated netlists
+*.op.raw
+
+# --- Simulink/Matlab Ignores ---
+*.autosave
+*.slxc              # Simulink cache
+slprj/              # Simulink project folders
+
+# --- Firmware Ignores ---
+.pio/               # PlatformIO build folder
+*.hex               # Compiled binary (keep in /production if needed)
+*.elf
