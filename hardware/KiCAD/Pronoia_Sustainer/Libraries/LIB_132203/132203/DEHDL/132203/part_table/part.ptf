@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART '132203'
+CLASS = IO
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "DESCRIPTION", "DATASHEET", "HEIGHT";
+{========================================================================================}
+ "Amphenol RF", "132203" (!) = "", "132203", "Other", "", "", "132203", "https://www.arrow.com/en/products/132203/amphenol-rf?utm_currency=USD&region=nac", "SMA Connector Jack, Female Socket 50 Ohms Panel Mount, Through Hole, Right Angle Solder", "https://s3-us-west-2.amazonaws.com/catsy.582/C132203.pdf", "10.64 mm"
+END_PART
+
+END.

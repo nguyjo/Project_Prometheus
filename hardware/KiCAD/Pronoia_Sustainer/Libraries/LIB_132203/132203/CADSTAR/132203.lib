@@ -1,0 +1,18 @@
+.132203 :1 ;SMA Connector Jack, Female Socket 50 Ohms Panel Mount, Through Hole, Right Angle Solder
+"132203"
+*STM J
+*NGS
+*PLB 1="1" 2="2" 3="3" 4="4" 5="5"
+*MXP 5
+*DFN 132203
+~!Manufacturer_Name (Amphenol RF)
+~!Manufacturer_Part_Number (132203)
+~!Mouser Part Number (-)
+~!Mouser Price/Stock (-)
+~!Arrow Part Number (132203)
+~!Link Arrow Price/Stock (https://www.arrow.com/en/products/132203/amphenol-rf?utm_currency=USD&region=nac)
+~!Link Datasheet (https://s3-us-west-2.amazonaws.com/catsy.582/C132203.pdf)
+~!Height (10.64mm)
+~!3D_Model (132203)
+"132203"
+1.1!U 2.1!U 3.1!U 4.1!U 5.1!U 

@@ -1,4 +1,4 @@
-27477652889189244
+27482962331029709
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -63272,6 +63272,13 @@ GDT 3R-6
 0
 3
 3
+H3LIS331DL
+QFN300X300X100-16N
+
+
+0
+16
+16
 Heatsink
 Heatsink_35x26mm_1xFixation3mm_Fischer-SK486-35
 Heatsink, 35mm x 26mm, 1x Fixation 3mm, Fischer SK486-35
@@ -70552,6 +70559,13 @@ solder jumper open
 0
 3
 3
+KiCad
+132203
+132203-2
+Connector
+0
+5
+5
 LED_SMD
 LED-APA102-2020
 http://www.led-color.com/upload/201604/APA102-2020%20SMD%20LED.pdf
@@ -71802,6 +71816,13 @@ LED_THT
 LED_VCCLite_5381H7_6.35x6.35mm
 Yellow 5381 Series LED VCCLite https://vcclite.com/wp-content/uploads/wpallimport/files/files/5381Series.pdf http://static.vcclite.com/pdf/Mounting%20Hole%20Pattern%202.pdf
 Yellow 5381 Series LED
+0
+2
+2
+MS621FE-FL11E
+BAT_MS621FE-FL11E
+
+
 0
 2
 2
