@@ -621,8 +621,24 @@
       "Root"
     ],
     [
+      "b975b20e-c796-4672-9957-380a62642c18",
+      "Power Management"
+    ],
+    [
+      "4a36a417-7784-401b-b09f-7298ae1f066c",
+      "Flight Computer"
+    ],
+    [
       "b04312fc-14cc-4fe0-94ea-708f1867652a",
-      "PyroChannels"
+      "High-Power Actuators"
+    ],
+    [
+      "c722cfdc-f93d-4c5f-89fc-d187019728e8",
+      "GNC Sensors"
+    ],
+    [
+      "a319d727-a504-4e2a-8ae8-c5d7a33202ff",
+      "Communications & Navigation"
     ]
   ],
   "text_variables": {}

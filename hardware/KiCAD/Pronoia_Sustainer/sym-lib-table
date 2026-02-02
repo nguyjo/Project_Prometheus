@@ -5,4 +5,5 @@
   (lib (name "H3LIS331DL")(type "KiCad")(uri "${KIPRJMOD}/Libraries/H3LIS331DL/H3LIS331DL.kicad_sym")(options "")(descr ""))
   (lib (name "132203")(type "KiCad")(uri "${KIPRJMOD}/Libraries/LIB_132203/132203/KiCad/132203.kicad_sym")(options "")(descr ""))
   (lib (name "MS621FE-FL11E")(type "KiCad")(uri "${KIPRJMOD}/Libraries/MS621FE-FL11E/MS621FE-FL11E.kicad_sym")(options "")(descr ""))
+  (lib (name "PS1240P02BT")(type "KiCad")(uri "${KIPRJMOD}/Libraries/PS1240P02BT/PS1240P02BT.kicad_sym")(options "")(descr ""))
 )
