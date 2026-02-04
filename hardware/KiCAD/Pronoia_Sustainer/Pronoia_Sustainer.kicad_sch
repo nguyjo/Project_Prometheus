@@ -190,16 +190,6 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 91.44) (xy 123.19 91.44)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "778db850-3abf-4bc4-9bcc-1a96ac394a44")
-	)
-	(wire
-		(pts
 			(xy 71.12 82.55) (xy 71.12 83.82)
 		)
 		(stroke
@@ -370,16 +360,6 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 105.41) (xy 123.19 105.41)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ded59c9d-fc19-4470-bca5-9d3d7bf507c1")
-	)
-	(wire
-		(pts
 			(xy 114.3 100.33) (xy 123.19 100.33)
 		)
 		(stroke
@@ -450,7 +430,7 @@
 	)
 	(sheet
 		(at 123.19 53.34)
-		(size 27.94 81.28)
+		(size 27.94 72.39)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -474,7 +454,7 @@
 			)
 		)
 		(property "Sheetfile" "MCU.kicad_sch"
-			(at 123.19 135.2046 0)
+			(at 123.19 126.3146 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -562,16 +542,6 @@
 				(justify left)
 			)
 		)
-		(pin "Pyro4" output
-			(at 123.19 91.44 180)
-			(uuid "7dd23ee2-628c-4575-97af-2b2adf481587")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
 		(pin "PyroSense0" input
 			(at 123.19 95.25 180)
 			(uuid "a782872f-0e27-45a1-bb0b-d23e45ef319f")
@@ -605,16 +575,6 @@
 		(pin "PyroSense3" input
 			(at 123.19 102.87 180)
 			(uuid "76b612c3-3b39-49f8-83fd-129425fb684f")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(pin "PyroSense4" input
-			(at 123.19 105.41 180)
-			(uuid "48ace414-de38-41d6-b3c2-f1f83c6d072e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -832,7 +792,7 @@
 	)
 	(sheet
 		(at 156.21 87.63)
-		(size 39.37 46.99)
+		(size 39.37 38.1)
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
@@ -856,7 +816,7 @@
 			)
 		)
 		(property "Sheetfile" "RF.kicad_sch"
-			(at 156.21 135.2046 0)
+			(at 156.21 126.3146 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1116,16 +1076,6 @@
 				(justify right)
 			)
 		)
-		(pin "Pyro4" input
-			(at 114.3 91.44 0)
-			(uuid "954cf966-6971-4db2-b188-51f3e8e1d9df")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
 		(pin "PyroSense0" output
 			(at 114.3 95.25 0)
 			(uuid "01b4b7b4-407f-48e0-a50f-2ef2547578b8")
@@ -1159,16 +1109,6 @@
 		(pin "PyroSense3" output
 			(at 114.3 102.87 0)
 			(uuid "99241981-b0d8-43d4-a522-8ef00fdad4b6")
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(pin "PyroSense4" output
-			(at 114.3 105.41 0)
-			(uuid "15230f70-d8f6-47fc-9159-46e29fdbac03")
 			(effects
 				(font
 					(size 1.27 1.27)
