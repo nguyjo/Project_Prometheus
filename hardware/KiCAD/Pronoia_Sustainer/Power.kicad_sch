@@ -3949,7 +3949,7 @@
 	)
 	(text "5 V Buck Converter"
 		(exclude_from_sim no)
-		(at 113.284 68.326 0)
+		(at 122.428 68.072 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -3967,7 +3967,7 @@
 		)
 		(uuid "6e929a7f-4fef-4a0e-95aa-43488e49b162")
 	)
-	(text "Voltage Monitor"
+	(text "2S LiPo Voltage Monitor"
 		(exclude_from_sim no)
 		(at 226.568 78.74 0)
 		(effects

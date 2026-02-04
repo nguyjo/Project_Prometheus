@@ -3098,7 +3098,7 @@
 	)
 	(text "Parts Not Shown"
 		(exclude_from_sim no)
-		(at 253.238 19.558 0)
+		(at 237.744 19.812 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -3106,9 +3106,9 @@
 		)
 		(uuid "a92402a4-9811-4cdd-a555-5706a8457f6b")
 	)
-	(text "1/4 wave Wire Whip Antenna"
+	(text "Antenna (Rubber Ducky, or fabricate 1/4 wave or 1/2 wave)"
 		(exclude_from_sim no)
-		(at 250.952 27.178 0)
+		(at 251.714 25.4 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3264,7 +3264,7 @@
 	)
 	(wire
 		(pts
-			(xy 161.29 87.63) (xy 163.83 87.63)
+			(xy 161.29 87.63) (xy 167.64 87.63)
 		)
 		(stroke
 			(width 0)
@@ -3859,7 +3859,7 @@
 	)
 	(symbol
 		(lib_id "Connector_Generic:Conn_01x01")
-		(at 168.91 87.63 0)
+		(at 172.72 87.63 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3868,7 +3868,7 @@
 		(fields_autoplaced yes)
 		(uuid "4228295e-1589-453f-8bfa-dcfcfbb72c11")
 		(property "Reference" "J14"
-			(at 171.45 86.3599 0)
+			(at 175.26 86.3599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3877,7 +3877,7 @@
 			)
 		)
 		(property "Value" "ANTENNA_PAD"
-			(at 171.45 88.8999 0)
+			(at 175.26 88.8999 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3886,7 +3886,7 @@
 			)
 		)
 		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x01_P2.54mm_Vertical"
-			(at 168.91 87.63 0)
+			(at 172.72 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3895,7 +3895,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 168.91 87.63 0)
+			(at 172.72 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3904,7 +3904,7 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x01, script generated (kicad-library-utils/schlib/autogen/connector/)"
-			(at 168.91 87.63 0)
+			(at 172.72 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3913,7 +3913,7 @@
 			)
 		)
 		(property "LCSC" ""
-			(at 168.91 87.63 0)
+			(at 172.72 87.63 0)
 			(effects
 				(font
 					(size 1.27 1.27)
