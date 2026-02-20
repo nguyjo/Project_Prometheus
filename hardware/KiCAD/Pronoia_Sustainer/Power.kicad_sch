@@ -4,6 +4,13 @@
 	(generator_version "9.0")
 	(uuid "1e06585f-674c-48c7-8476-da329e3e0020")
 	(paper "A4")
+	(title_block
+		(title "Pronoia Sustainer Power Management")
+		(date "2026-02-03")
+		(rev "1.0")
+		(company "Walla Walla University")
+		(comment 1 "Prometheus Rocket Project")
+	)
 	(lib_symbols
 		(symbol "Connector:Screw_Terminal_01x02"
 			(pin_names

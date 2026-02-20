@@ -4,6 +4,13 @@
 	(generator_version "9.0")
 	(uuid "a52c1391-df63-4051-9633-c08117fd9132")
 	(paper "A4")
+	(title_block
+		(title "Pronoia Sustainer Flight Computer")
+		(date "2026-02-03")
+		(rev "1.0")
+		(company "Walla Walla University")
+		(comment 1 "Prometheus Rocket Project")
+	)
 	(lib_symbols
 		(symbol "PCM_JLCPCB-Capacitors:0402,100nF"
 			(pin_numbers

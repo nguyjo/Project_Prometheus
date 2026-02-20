@@ -4,6 +4,13 @@
 	(generator_version "9.0")
 	(uuid "b712211b-8194-4ae8-9475-f1e9e1ace372")
 	(paper "A4")
+	(title_block
+		(title "Pronoia Sustainer Actuators")
+		(date "2026-02-03")
+		(rev "1.0")
+		(company "Walla Walla University")
+		(comment 1 "Prometheus Rocket Project")
+	)
 	(lib_symbols
 		(symbol "Connector:Conn_01x03_Pin"
 			(pin_names
@@ -2266,7 +2273,7 @@
 			(embedded_fonts no)
 		)
 	)
-	(text "5 E-matches (Order and Connect via Screw Terminal Block)"
+	(text "4 E-matches (Order and Connect via Screw Terminal Block)"
 		(exclude_from_sim no)
 		(at 253.238 23.368 0)
 		(effects

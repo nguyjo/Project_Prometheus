@@ -4,6 +4,13 @@
 	(generator_version "9.0")
 	(uuid "e7fb17ce-e237-4a94-9182-1236208a0aaf")
 	(paper "A4")
+	(title_block
+		(title "Pronoia Sustainer Communications")
+		(date "2026-02-03")
+		(rev "1.0")
+		(company "Walla Walla University")
+		(comment 1 "Prometheus Rocket Project")
+	)
 	(lib_symbols
 		(symbol "132203:132203"
 			(exclude_from_sim no)

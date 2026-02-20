@@ -5,7 +5,7 @@
 	(uuid "33e0e590-80be-4096-a732-129afca197c6")
 	(paper "A4")
 	(title_block
-		(title "Pronoia Sustainer")
+		(title "Pronoia Sustainer Root")
 		(date "2026-01-22")
 		(rev "1.0")
 		(company "Walla Walla University")
@@ -806,7 +806,7 @@
 			(color 0 0 0 0.0000)
 		)
 		(uuid "a319d727-a504-4e2a-8ae8-c5d7a33202ff")
-		(property "Sheetname" "Communications & Navigation"
+		(property "Sheetname" "Communications"
 			(at 156.21 86.9184 0)
 			(effects
 				(font
