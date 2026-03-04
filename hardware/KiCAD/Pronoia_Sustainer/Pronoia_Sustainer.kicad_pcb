@@ -7,6 +7,13 @@
 		(legacy_teardrops no)
 	)
 	(paper "A4")
+	(title_block
+		(title "Pronoia Flight Computer PCBA Layous")
+		(date "2026-03-03")
+		(rev "1.0")
+		(company "Walla Walla University")
+		(comment 1 "Prometheus Rocket Project")
+	)
 	(layers
 		(0 "F.Cu" signal)
 		(2 "B.Cu" signal)

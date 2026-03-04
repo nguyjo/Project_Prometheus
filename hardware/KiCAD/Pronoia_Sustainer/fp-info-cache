@@ -1,4 +1,25 @@
-27484732373483177
+27490122040832600
+640457-2
+TE_640457-2
+
+
+0
+2
+2
+640457-4
+TE_640457-4
+
+
+0
+4
+4
+1751303
+1751303
+1751303
+Connector
+0
+8
+8
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -63272,13 +63293,13 @@ GDT 3R-6
 0
 3
 3
-H3LIS331DL
-QFN300X300X100-16N
+GSD9605YB-3V2800
+BUZ-SMD_GSD9605YB-3V2800
 
 
 0
-16
-16
+2
+2
 Heatsink
 Heatsink_35x26mm_1xFixation3mm_Fischer-SK486-35
 Heatsink, 35mm x 26mm, 1x Fixation 3mm, Fischer SK486-35
@@ -70559,6 +70580,13 @@ solder jumper open
 0
 3
 3
+KX134-1211
+KIONIX_KXTJ3-1057
+
+
+0
+12
+12
 KiCad
 132203
 132203-2
@@ -76810,13 +76838,6 @@ WQFN-28_L5.0-W5.0-P0.50-BL-EP3.2 footprint C6568
 0
 38
 29
-PS1240P02BT
-XDCR_PS1240P02BT
-
-
-0
-2
-2
 Package_BGA
 Alliance_TFBGA-36_6x8mm_Layout6x8_P0.75mm
 Alliance TFBGA-36, NSMD, 6.0x8.0mm, 36 Ball, 6x8 Layout, 0.75mm Pitch, generated with kicad-footprint-generator ipc_bga_generator.py, https://www.alliancememory.com/wp-content/uploads/pdf/AS6C1008_Mar_2023V1.2.pdf#page=13

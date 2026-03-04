@@ -8,4 +8,7 @@
   (lib (name "PS1240P02BT")(type "KiCad")(uri "${KIPRJMOD}/Libraries/PS1240P02BT/PS1240P02BT.kicad_sym")(options "")(descr "")(disabled))
   (lib (name "KX134-1211")(type "KiCad")(uri "${KIPRJMOD}/Libraries/KX134-1211/2026-02-27_03-21-48.kicad_sym")(options "")(descr ""))
   (lib (name "GSD9605YB-3V2800")(type "KiCad")(uri "${KIPRJMOD}/Libraries/GSD9605YB-3V2800/GSD9605YB-3V2800.kicad_sym")(options "")(descr ""))
+  (lib (name "640457-2")(type "KiCad")(uri "${KIPRJMOD}/Libraries/640457-2/640457-2.kicad_sym")(options "")(descr ""))
+  (lib (name "640457-4")(type "KiCad")(uri "${KIPRJMOD}/Libraries/640457-4/640457-4.kicad_sym")(options "")(descr ""))
+  (lib (name "1751303")(type "KiCad")(uri "${KIPRJMOD}/Libraries/LIB_1751303/1751303/1751303.kicad_sym")(options "")(descr ""))
 )
