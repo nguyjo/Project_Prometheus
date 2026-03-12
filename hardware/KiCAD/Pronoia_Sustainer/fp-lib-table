@@ -11,4 +11,6 @@
   (lib (name "640457-2")(type "KiCad")(uri "${KIPRJMOD}/Libraries/640457-2")(options "")(descr ""))
   (lib (name "640457-4")(type "KiCad")(uri "${KIPRJMOD}/Libraries/640457-4")(options "")(descr ""))
   (lib (name "1751303")(type "KiCad")(uri "${KIPRJMOD}/Libraries/LIB_1751303/1751303")(options "")(descr ""))
+  (lib (name "M3MountingHole")(type "KiCad")(uri "${KIPRJMOD}/Libraries/M3MountingHole.pretty")(options "")(descr ""))
+  (lib (name "Graphics")(type "KiCad")(uri "${KIPRJMOD}/Libraries/Graphics.pretty")(options "")(descr ""))
 )

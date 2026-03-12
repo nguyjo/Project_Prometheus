@@ -447,7 +447,7 @@
 	)
 	(hierarchical_label "GX-12-4_RX"
 		(shape input)
-		(at 175.26 119.38 180)
+		(at 175.26 116.84 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -458,7 +458,7 @@
 	)
 	(hierarchical_label "GX-12-4_TX"
 		(shape output)
-		(at 175.26 116.84 180)
+		(at 175.26 119.38 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -474,7 +474,7 @@
 		(exclude_from_sim no)
 		(in_bom yes)
 		(on_board yes)
-		(dnp no)
+		(dnp yes)
 		(fields_autoplaced yes)
 		(uuid "81a60eed-1451-4919-aa57-a01960c407ab")
 		(property "Reference" "J8"
@@ -651,6 +651,14 @@
 				)
 				(justify bottom)
 				(hide yes)
+			)
+		)
+		(property "LCSC" ""
+			(at 185.42 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 			)
 		)
 		(pin "3"
