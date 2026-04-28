@@ -1,7 +1,7 @@
 (kicad_sch
-	(version 20250114)
+	(version 20260306)
 	(generator "eeschema")
-	(generator_version "9.0")
+	(generator_version "10.0")
 	(uuid "33e0e590-80be-4096-a732-129afca197c6")
 	(paper "A4")
 	(title_block
@@ -345,11 +345,13 @@
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0.0000)
+			(color 0 0 0 0)
 		)
 		(uuid "4a36a417-7784-401b-b09f-7298ae1f066c")
 		(property "Sheetname" "Flight Computer"
 			(at 121.92 52.6284 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -359,6 +361,8 @@
 		)
 		(property "Sheetfile" "MCU.kicad_sch"
 			(at 121.92 126.3146 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -667,11 +671,13 @@
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0.0000)
+			(color 0 0 0 0)
 		)
 		(uuid "a319d727-a504-4e2a-8ae8-c5d7a33202ff")
 		(property "Sheetname" "Communications"
 			(at 165.1 97.0784 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -681,6 +687,8 @@
 		)
 		(property "Sheetfile" "RF.kicad_sch"
 			(at 165.1 126.3146 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -739,11 +747,13 @@
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0.0000)
+			(color 0 0 0 0)
 		)
 		(uuid "b04312fc-14cc-4fe0-94ea-708f1867652a")
 		(property "Sheetname" "High-Power Actuators"
 			(at 73.66 66.5984 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -753,6 +763,8 @@
 		)
 		(property "Sheetfile" "Actuators.kicad_sch"
 			(at 73.66 108.5346 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -901,11 +913,13 @@
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0.0000)
+			(color 0 0 0 0)
 		)
 		(uuid "b975b20e-c796-4672-9957-380a62642c18")
 		(property "Sheetname" "Power Management"
 			(at 41.91 76.7584 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -915,6 +929,8 @@
 		)
 		(property "Sheetfile" "Power.kicad_sch"
 			(at 41.91 89.4846 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -963,11 +979,13 @@
 			(type solid)
 		)
 		(fill
-			(color 0 0 0 0.0000)
+			(color 0 0 0 0)
 		)
 		(uuid "c722cfdc-f93d-4c5f-89fc-d187019728e8")
 		(property "Sheetname" "GNC Sensors"
 			(at 165.1 52.6284 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -977,6 +995,8 @@
 		)
 		(property "Sheetfile" "Sensors.kicad_sch"
 			(at 165.1 92.0246 0)
+			(show_name no)
+			(do_not_autoplace no)
 			(effects
 				(font
 					(size 1.27 1.27)

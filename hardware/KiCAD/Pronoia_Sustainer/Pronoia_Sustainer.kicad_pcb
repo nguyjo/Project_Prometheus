@@ -142,9 +142,9 @@
 			(subtractmaskfromsilk no)
 			(outputformat 1)
 			(mirror no)
-			(drillshape 1)
+			(drillshape 0)
 			(scaleselection 1)
-			(outputdirectory "")
+			(outputdirectory "production/Drill Files/")
 		)
 	)
 	(net 0 "")
@@ -4093,7 +4093,7 @@
 		(path "/b04312fc-14cc-4fe0-94ea-708f1867652a/58e9e0be-0410-4c81-a698-e9a5d99f0cb4")
 		(sheetname "/High-Power Actuators/")
 		(sheetfile "Actuators.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start 1.38 1.27)
 			(end 1.38 6.46)
@@ -5913,7 +5913,7 @@
 		(path "/4a36a417-7784-401b-b09f-7298ae1f066c/d4ab95f5-3b1c-42a0-bbb8-be6d8f4c4d33")
 		(sheetname "/Flight Computer/")
 		(sheetfile "MCU.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start -1.33 1.27)
 			(end -1.33 59.75)
@@ -7838,7 +7838,7 @@
 		(path "/b975b20e-c796-4672-9957-380a62642c18/fb774a94-cc67-4b2c-a89b-449501d2baed")
 		(sheetname "/Power Management/")
 		(sheetfile "Power.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start 7.74 -5.32)
 			(end 7.74 4.72)
@@ -9970,7 +9970,7 @@
 				)
 			)
 		)
-		(attr smd)
+		(attr smd board_only exclude_from_pos_files exclude_from_bom)
 		(fp_circle
 			(center 0 0)
 			(end 3.5 0)
@@ -11870,7 +11870,7 @@
 		(path "/a319d727-a504-4e2a-8ae8-c5d7a33202ff/81a60eed-1451-4919-aa57-a01960c407ab")
 		(sheetname "/Communications/")
 		(sheetfile "RF.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start -1.27 -0.445)
 			(end -1.27 -8.191)
@@ -15119,7 +15119,7 @@
 		(path "/4a36a417-7784-401b-b09f-7298ae1f066c/922c8d5d-1495-4874-8394-1ccc40b625bb")
 		(sheetname "/Flight Computer/")
 		(sheetfile "MCU.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start -1.27 -0.445)
 			(end -1.27 -8.191)
@@ -15926,7 +15926,7 @@
 		(path "/b04312fc-14cc-4fe0-94ea-708f1867652a/72372bbc-50e2-4367-857f-8e12ecfc0a1f")
 		(sheetname "/High-Power Actuators/")
 		(sheetfile "Actuators.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start 1.38 1.27)
 			(end 1.38 6.46)
@@ -16665,7 +16665,7 @@
 				)
 			)
 		)
-		(attr smd)
+		(attr smd board_only exclude_from_pos_files exclude_from_bom)
 		(fp_circle
 			(center 0 0)
 			(end 3.5 0)
@@ -21530,7 +21530,7 @@
 				)
 			)
 		)
-		(attr smd)
+		(attr smd board_only exclude_from_pos_files exclude_from_bom)
 		(fp_circle
 			(center 0 0)
 			(end 3.5 0)
@@ -22122,7 +22122,7 @@
 		(path "/b04312fc-14cc-4fe0-94ea-708f1867652a/0f5e539b-5e17-4ced-82b8-a7a6a3aeb883")
 		(sheetname "/High-Power Actuators/")
 		(sheetfile "Actuators.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start 0 3.6)
 			(end 26.5 3.6)
@@ -25613,7 +25613,7 @@
 		(path "/b04312fc-14cc-4fe0-94ea-708f1867652a/afc5371d-0361-4b6b-b310-7b46973cb2c3")
 		(sheetname "/High-Power Actuators/")
 		(sheetfile "Actuators.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start 1.38 1.27)
 			(end 1.38 6.46)
@@ -31422,7 +31422,7 @@
 		(path "/b04312fc-14cc-4fe0-94ea-708f1867652a/74bbdcd0-19ce-45eb-81a7-99f847abf30a")
 		(sheetname "/High-Power Actuators/")
 		(sheetfile "Actuators.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start 1.38 1.27)
 			(end 1.38 6.46)
@@ -32141,7 +32141,7 @@
 		(path "/4a36a417-7784-401b-b09f-7298ae1f066c/af304d18-2e60-4bde-adc3-dadca7d18666")
 		(sheetname "/Flight Computer/")
 		(sheetfile "MCU.kicad_sch")
-		(attr through_hole dnp)
+		(attr through_hole exclude_from_pos_files exclude_from_bom dnp)
 		(fp_line
 			(start -1.33 1.27)
 			(end -1.33 59.75)
@@ -33426,6 +33426,19 @@
 				)
 			)
 		)
+		(property "LCSC" "C255327"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "27b708be-1541-4cd0-97f2-8684b69f96f5")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(path "/4a36a417-7784-401b-b09f-7298ae1f066c/3a0c1b7d-0ca6-4d04-90f7-ad2726b385a8")
 		(sheetname "/Flight Computer/")
 		(sheetfile "MCU.kicad_sch")
@@ -33644,7 +33657,7 @@
 				)
 			)
 		)
-		(attr smd)
+		(attr smd board_only exclude_from_pos_files exclude_from_bom)
 		(fp_circle
 			(center 0 0)
 			(end 3.5 0)
