@@ -11,6 +11,7 @@ fp-info-cache       # Footprint cache
 *-backups/
 *.kicad_pcb-bak
 *.kicad_prl         # Local panel settings (user preference)
+.history/
 
 # Generated Output Files (Artifacts)
 # force add these files into PRODUCTION after KiCAD is finished, not into KiCAD project folder
