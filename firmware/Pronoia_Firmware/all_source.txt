@@ -1,0 +1,1289 @@
+==========================================
+FILE: src/FlashMemory.cpp
+==========================================
+
+
+==========================================
+FILE: src/AccelerationSource.h
+==========================================
+#ifndef ACCELERATIONSOURCE_H
+#define ACCELERATIONSOURCE_H
+
+#include "IMU.h"
+#include "HighGAccel.h"
+
+// =============================================================================
+// AccelerationSource
+// =============================================================================
+// Adapter class that presents a single, gravity-removed, rocket-frame axial
+// acceleration value to the rest of the flight software. Internally, it
+// switches between the primary IMU (low noise, ±16g) and the KX134 high-G
+// accelerometer (±64g) based on IMU saturation.
+//
+// USAGE:
+//   1. Construct with references to existing IMU and HighGAccel objects.
+//   2. Each main loop iteration, call imu.update() and highG.update() FIRST,
+//      then call accelSource.update().
+//   3. Read getAxialAccelMps2() to get the value to feed to the StateEstimator.
+// =============================================================================
+
+class AccelerationSource {
+  public:
+    AccelerationSource(IMU& imu, HighGAccel& highG);
+
+    // Call once per main loop iteration AFTER both sensors have been update()'d
+    void update();
+
+    // Axial acceleration along rocket Z-axis (gravity removed), in m/s².
+    // This is the value to feed into velocity/altitude integration.
+    float getAxialAccelMps2() const { return _axialAccel_mps2; }
+
+    // Diagnostics & telemetry
+    bool isUsingHighG() const       { return _usingHighG; }
+    float getRawIMUAxialG() const   { return _rawIMUAccel_g; }
+    float getRawHighGAxialG() const { return _rawHighGAccel_g; }
+
+  private:
+    IMU& _imu;
+    HighGAccel& _highG;
+
+    float _axialAccel_mps2  = 0.0f;
+    float _rawIMUAccel_g    = 0.0f;
+    float _rawHighGAccel_g  = 0.0f;
+    bool  _usingHighG       = false;
+
+    // Saturation threshold — switch to KX134 when IMU exceeds this in g.
+    // Set below ±16g limit to switch BEFORE clipping artifacts appear.
+    static constexpr float IMU_SATURATION_THRESHOLD_G = 15.5f;
+    static constexpr float G_TO_MPS2 = 9.80665f;
+};
+
+#endif
+
+==========================================
+FILE: src/AccelerationSource.cpp
+==========================================
+#include "AccelerationSource.h"
+#include <math.h>
+
+AccelerationSource::AccelerationSource(IMU& imu, HighGAccel& highG)
+  : _imu(imu), _highG(highG) {}
+
+void AccelerationSource::update() {
+  // Pull rocket-frame axial readings from each sensor.
+  // The accessors handle chip-to-rocket axis remapping internally.
+  _rawIMUAccel_g   = _imu.axialAccelG();
+  _rawHighGAccel_g = _highG.axialAccelG();
+
+  // Decide which sensor to trust based on IMU saturation.
+  if (fabsf(_rawIMUAccel_g) < IMU_SATURATION_THRESHOLD_G) {
+    // IMU is in valid range — use it (lower noise, better precision near 1g).
+    _usingHighG = false;
+    _axialAccel_mps2 = (_rawIMUAccel_g - 1.0f) * G_TO_MPS2;
+  } else {
+    // IMU saturated — fall back to KX134.
+    _usingHighG = true;
+    _axialAccel_mps2 = (_rawHighGAccel_g - 1.0f) * G_TO_MPS2;
+  }
+}
+
+==========================================
+FILE: src/flight/FlightStrategy.h
+==========================================
+// FlightStrategy.h
+#ifndef FLIGHTSTRATEGY_H
+#define FLIGHTSTRATEGY_H
+
+class FlightStrategy {
+  public:
+    virtual ~FlightStrategy() = default;
+
+    // Called every loop iteration during flight
+    virtual void update(float dt_s) = 0;
+
+    // Called when liftoff is detected
+    virtual void onLiftoff() = 0;
+
+    // Called when motor burnout is detected
+    virtual void onBurnout() = 0;
+
+    // Called when apogee is detected
+    virtual void onApogee() = 0;
+
+    // Called when main deployment altitude is reached
+    virtual void onMainDeploy() = 0;
+};
+
+#endif
+
+==========================================
+FILE: src/common/HighGAccel.h
+==========================================
+#ifndef HighGAccel_H
+#define HighGAccel_H
+
+#include <Arduino.h>
+#include <SPI.h>
+
+class HighGAccel {
+  public:
+    HighGAccel(int csPin); // Constructor
+    bool begin();   // Bring-up and configure registers
+    void update();  // Read the latest data
+
+    // Public read/write tools
+    void writeRegister(uint8_t regAddress, uint8_t data);
+    uint8_t readRegister(uint8_t regAddress);
+    
+    // ============================================================
+    // RAW CHIP-FRAME READINGS
+    // KX134 chip's native coordinate system. Diagnostics only.
+    // ============================================================
+    float accelX, accelY, accelZ;   // g's, chip frame
+
+    // ============================================================
+    // ROCKET-FRAME ACCESSORS
+    // ============================================================
+    // ⚠ NOT VERIFIED ON BENCH YET — KX134 chip orientation may
+    //   differ from IMU due to PCB layout. Test nose-up before
+    //   trusting these values.
+    //
+    // TODO: Tentative mapping (matches IMU until proven otherwise):
+    //   Rocket Axial = Chip +Y
+    //   Rocket Lat-1 = Chip +X
+    //   Rocket Lat-2 = Chip +Z
+    // ============================================================
+    inline float axialAccelG() const { return accelY; }
+    inline float lat1AccelG()  const { return accelX; }
+    inline float lat2AccelG()  const { return accelZ; }
+
+  private:
+    int _csPin;
+};
+
+#endif
+
+==========================================
+FILE: src/common/Config.h
+==========================================
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// =============================================================================
+// PROMETHEUS AVIONICS — SYSTEM CONFIGURATION
+// =============================================================================
+// All compile-time configuration lives here. Change values, recompile, reflash.
+// DO NOT scatter magic numbers across multiple files — put them here.
+// =============================================================================
+
+namespace Config {
+
+namespace Build {
+
+#if defined(BUILD_FOR_BOOSTER)
+  static constexpr const char* STAGE_NAME = "BOOSTER";
+  static constexpr bool IS_BOOSTER  = true;
+  static constexpr bool IS_SUSTAINER = false;
+#elif defined(BUILD_FOR_SUSTAINER)
+  static constexpr const char* STAGE_NAME = "SUSTAINER";
+  static constexpr bool IS_BOOSTER  = false;
+  static constexpr bool IS_SUSTAINER = true;
+#else
+  #error "Must define BUILD_FOR_BOOSTER or BUILD_FOR_SUSTAINER in platformio.ini"
+#endif
+
+// Build timestamp — embedded automatically by the compiler at build time.
+// Useful for verifying which firmware version is loaded when debugging.
+static constexpr const char* BUILD_DATE = __DATE__;
+static constexpr const char* BUILD_TIME = __TIME__;
+
+}
+
+// ---------- Hardware Pin Assignments ----------
+namespace Pins {
+    constexpr int IMU_CS         = 10;
+    constexpr int HIGHG_CS       = 37;
+    constexpr int BARO_CS        = 0;
+    // constexpr int FLASH_CS       =; Flash Chip communicates over Teensy 4.1 Integrated QPI, so no CS pin needed
+
+    constexpr int EXTERNAL_CONN_DETECT = 18;   // GX12 detect pin
+
+    constexpr int PYRO0_FIRE     = 41;
+    constexpr int PYRO1_FIRE     = 40;
+    constexpr int PYRO2_FIRE     = 39;
+    constexpr int PYRO3_FIRE     = 38;
+    constexpr int PYRO0_CONT     = 36;
+    constexpr int PYRO1_CONT     = 35;
+    constexpr int PYRO2_CONT     = 34;
+    constexpr int PYRO3_CONT     = 33;
+}
+
+// ---------- Sensor Sampling Rates ----------
+namespace Rates {
+    constexpr uint32_t IMU_HZ       = 1000;
+    constexpr uint32_t HIGHG_HZ     = 800;   // KX134 ODR setting
+    constexpr uint32_t BARO_HZ      = 50;    // MS5611 with OSR=4096
+    constexpr uint32_t CONTROL_HZ   = 100;   // Outer control loop (servos)
+
+    // No Telemetry in 2025-2026 Prometheus Rocket Project
+    // constexpr uint32_t TELEMETRY_HZ = 20;    // Serial4 to ground
+}
+
+// // ---------- Flight Profile Limits & Safety ----------
+// namespace Safety {
+//     // Sustainer ignition interlock — max off-vertical angle (degrees)
+//     constexpr float MAX_SUSTAINER_TILT_DEG  = 20.0f;
+
+//     // Booster separation timing
+//     constexpr uint32_t SEPARATION_DELAY_MS  = /* fill in */;
+//     constexpr uint32_t SUSTAINER_DELAY_MS   = /* fill in */;
+
+//     // Pyro firing duration
+//     constexpr uint32_t PYRO_FIRE_TIME_MS    = 500;
+
+//     // Liftoff detection — sustained accel above this triggers liftoff
+//     constexpr float LIFTOFF_ACCEL_G         = 2.5f;
+//     constexpr uint32_t LIFTOFF_DURATION_MS  = 100;
+// }
+
+// // ---------- State Estimator Tuning ----------
+// namespace Estimator {
+//     constexpr float VEL_FUSION_TAU_S        = 1.0f;
+//     constexpr float ALT_FUSION_TAU_S        = 0.2f;
+//     constexpr float MAX_VALID_BARO_VEL_MPS  = 300.0f;
+//     constexpr float MAX_VALID_BARO_ALT_M    = 13000.0f;
+//     constexpr float COAST_THRESHOLD_MPS2    = 0.2f * 9.80665f;
+// }
+
+}  // namespace Config
+
+#endif
+
+==========================================
+FILE: src/common/ExternalConn.cpp
+==========================================
+#include "ExternalConn.h"
+#include "Config.h"
+
+// Constructor
+ExternalConn::ExternalConn(int detectPin) : _detectPin(detectPin) {
+  isArmed = false;
+  isLogging = false;
+}
+
+void ExternalConn::begin() {
+  pinMode(_detectPin, INPUT_PULLUP);
+  Serial4.begin(115200); 
+  delay(100);
+}
+
+bool ExternalConn::isConnected() {
+  // Returns true if the pin is bridged to GND
+  return (digitalRead(_detectPin) == LOW);
+}
+
+void ExternalConn::update() {
+  // Process any new command
+  if (isConnected() && Serial4.available() > 0) {
+    String cmd = Serial4.readStringUntil('\n');
+    cmd.trim();          
+    cmd.toUpperCase();   
+    processCommand(cmd);
+  }
+}
+
+void ExternalConn::processCommand(String cmd) {
+  Serial4.print("\n>>> ROCKET RECEIVED: ");
+  Serial4.println(cmd);
+
+  if (cmd == "HELP") {
+    Serial4.println("AVAILABLE COMMANDS:");
+    Serial4.println("  HELP            - Show this menu");
+    Serial4.println("  STATUS          - System status");
+    Serial4.println("  CAL_GYRO        - Calibrate gyro bias");
+    Serial4.println("  CAL_BARO        - Calibrate ground altitude");
+    Serial4.println("  ARM             - Software arm (DO NOT USE on bench)");
+    Serial4.println("  LOG_START       - Begin data logging");
+    Serial4.println("  STAGE           - Report which stage firmware is loaded");
+  }
+  else if (cmd == "STATUS") {
+    Serial4.println("AVIONICS HEALTHY. WAITING FOR CALIBRATION.");
+  }
+  else if (cmd == "ARM") {
+    isArmed = true;
+    Serial4.println("WARNING: SOFTWARE ARMED. READY FOR FLIGHT.");
+  }
+  else if (cmd == "LOG_START") {
+    isLogging = true;
+    Serial4.println("DATA LOGGING STARTED.");
+  }
+  else if (cmd == "STAGE") {
+    Serial4.printf(">>> Stage: %s\n", Config::Build::STAGE_NAME);
+    Serial4.printf(">>> Build: %s %s\n", Config::Build::BUILD_DATE, Config::Build::BUILD_TIME);
+  }
+  else {
+    Serial4.println("ERROR: UNKNOWN COMMAND. TYPE 'HELP'.");
+  }
+}
+
+==========================================
+FILE: src/common/ExternalConn.h
+==========================================
+#ifndef EXTERNALCONN_H
+#define EXTERNALCONN_H
+
+#include <Arduino.h>
+
+class ExternalConn {
+  public:
+    ExternalConn(int detectPin); // Constructor with just the External Connection detect pin
+
+    // Methods
+    void begin();
+    void update();
+    bool isConnected();
+
+    // Flight Flags (Public so main.cpp can read them)
+    bool isArmed;
+    bool isLogging;
+
+  private:
+    int _detectPin;
+
+    void processCommand(String cmd);
+};
+
+#endif
+
+==========================================
+FILE: src/common/IMU.h
+==========================================
+#ifndef IMU_H
+#define IMU_H
+
+#include <Arduino.h>
+#include <SPI.h>
+
+class IMU {
+  public:
+    IMU(int csPin); // Constructor
+    bool begin();   // Bring-up and configure registers
+    void update();  // Read the latest data
+    void calibrateGyro(int samples);
+    
+    // ============================================================
+    // RAW CHIP-FRAME READINGS
+    // These are in the IMU chip's native coordinate system.
+    // Use these ONLY for diagnostics, calibration verification,
+    // or low-level debugging. DO NOT use these in flight code.
+    // ============================================================
+    float accelX, accelY, accelZ;
+    float gyroX, gyroY, gyroZ;
+
+    // ============================================================
+    // ROCKET-FRAME ACCESSORS — USE THESE EVERYWHERE IN FLIGHT CODE
+    // ============================================================
+    // Axis mapping for Prometheus avionics PCB:
+    //   Rocket Axial  (along rocket length, +up)                     = Chip +Y
+    //   Rocket Lat-1  (to the right of the rocket, when facing it)   = Chip +X
+    //   Rocket Lat-2  (pointed towards you, when facing the rocket)  = Chip +Z
+    //
+    // ⚠ If PCB layout changes, update ONLY this section.
+    //   Verify on bench: nose-up should give axialAccelG() ≈ +1.0
+    // ============================================================
+    inline float axialAccelG() const   { return  accelY; }
+    inline float lat1AccelG()  const   { return  accelX; }
+    inline float lat2AccelG()  const   { return  accelZ; }
+
+    // Gyro rotation axis convention:
+    //   Roll  = rotation about rocket axial axis = gyroY // A positive roll is counterclockwise rotation when looking at the rocket axially from the base
+    //   Pitch = rotation about Lat-1 axis        = gyroX // A positive pitch is counterclockwise rotation when looking at the rocket from the right side
+    //   Yaw   = rotation about Lat-2 axis        = gyroZ // A positive yaw is a counterclockwise rotation when looking at the rocket from "the front"
+    inline float rollRateDps()  const  { return  gyroY; }
+    inline float pitchRateDps() const  { return  gyroX; }
+    inline float yawRateDps()   const  { return  gyroZ; }
+
+  private:
+    int _csPin;
+
+    // Offset storage
+    float _gyroX_off = 0;
+    float _gyroY_off = 0;
+    float _gyroZ_off = 0;
+
+    void writeRegister(uint8_t reg, uint8_t data);
+    uint8_t readRegister(uint8_t reg);
+};
+
+#endif
+
+==========================================
+FILE: src/common/BenchTool.h
+==========================================
+
+// =============================================================================
+// BenchTool
+// =============================================================================
+// Bench-side diagnostic interface, listening on USB Serial (NOT Serial4).
+//
+// This interface is intended for development, debugging, and bench testing.
+// It exposes raw sensor access and other low-level diagnostic features that
+// are intentionally NOT available via the pad-time ExternalConn interface.
+//
+// At the launch site, no USB cable is connected, so BenchTool commands are
+// physically unreachable. This is defense-in-depth against accidental
+// invocation of debug commands during flight operations.
+// =============================================================================
+
+#ifndef BENCHTOOL_H
+#define BENCHTOOL_H
+
+#include <Arduino.h>
+#include "IMU.h"
+#include "HighGAccel.h"
+#include "AccelerationSource.h"
+#include "Barometer.h"
+
+class BenchTool {
+  public:
+    BenchTool(IMU& imu, HighGAccel& highG, AccelerationSource& accelSrc, Barometer& baro);
+
+    void begin();
+    void update();
+
+  private:
+    IMU& _imu;
+    HighGAccel& _highG;
+    AccelerationSource& _accelSrc;
+    Barometer& _baro;
+
+    bool _streaming = false;
+    unsigned long _lastStreamPrintMs = 0;
+    static constexpr unsigned long STREAM_INTERVAL_MS = 50;  // 20 Hz
+
+    void processCommand(String cmd);
+    void streamSensorReadings();
+    void printHelp();
+};
+
+#endif
+
+==========================================
+FILE: src/common/Barometer.cpp
+==========================================
+#include "Barometer.h"
+
+Barometer::Barometer(int csPin) {
+  _csPin = csPin;
+}
+
+bool Barometer::begin() {
+  pinMode(_csPin, OUTPUT);
+  digitalWrite(_csPin, HIGH);
+
+  // Send Software Reset
+  SPI1.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  SPI1.transfer(0x1E);
+  digitalWrite(_csPin, HIGH);
+  SPI1.endTransaction();
+
+  delay(5); // Wait 5ms for the PROM to reload its memory into the registers
+
+  // Extract the 6 Factory Calibration Variables
+  C1 = readPROM(0xA2); // Pressure Sensitivity
+  C2 = readPROM(0xA4); // Pressure Offset
+  C3 = readPROM(0xA6); // Temperature Coefficient of Pressure Sensitivity
+  C4 = readPROM(0xA8); // Temperature Coefficient of Pressure Offset
+  C5 = readPROM(0xAA); // Reference Temperature
+  C6 = readPROM(0xAC); // Temperature Coefficient of the Temperature
+
+  // // Check 6 Coefficients read from PROM
+  // Serial.print("Raw C1 from bus: "); 
+  // Serial.println(C1);
+  // Serial.print("Raw C2 from bus: "); 
+  // Serial.println(C2);
+  // Serial.print("Raw C3 from bus: "); 
+  // Serial.println(C3);
+  // Serial.print("Raw C4 from bus: "); 
+  // Serial.println(C4);
+  // Serial.print("Raw C5 from bus: ");
+  // Serial.println(C5);
+  // Serial.print("Raw C6 from bus: ");
+  // Serial.println(C6);
+
+  // If any is Coefficient is 0 or 65535, the PROM read failed
+  if (C1 == 0x0000 || C1 == 0xFFFF || C2 == 0x0000 || C2 == 0xFFFF || C3 == 0x0000 || C3 == 0xFFFF ||
+      C4 == 0x0000 || C4 == 0xFFFF || C5 == 0x0000 || C5 == 0xFFFF || C6 == 0x0000 || C6 == 0xFFFF) {
+    return false;
+  }
+  
+  return true;
+}
+
+// Helper function to read 16 bits from the PROM
+uint16_t Barometer::readPROM(uint8_t cmd) {
+  SPI1.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  
+  SPI1.transfer(cmd); // Ask for the specific PROM address
+  uint8_t highByte = SPI1.transfer(0x00);
+  uint8_t lowByte = SPI1.transfer(0x00);
+  
+  digitalWrite(_csPin, HIGH);
+  SPI1.endTransaction();
+  
+  return (highByte << 8) | lowByte;
+}
+
+// --- The Non-Blocking State Machine that pulls D1/D2 values ---
+bool Barometer::update() {
+  switch (_state) {
+    case 0: // IDLE: Ask for Raw Pressure (D1)
+      SPI1.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+      digitalWrite(_csPin, LOW);
+      SPI1.transfer(0x48); // 0x48 = Convert D1 with highest resolution (OSR=4096)
+      digitalWrite(_csPin, HIGH);
+      SPI1.endTransaction();
+      
+      _lastRequestTime = micros(); // Record the exact microsecond we asked
+      _state = 1; // Move to next state
+      return false; // D1 data not ready yet
+
+    case 1: // WAITING FOR D1
+      // Highest resolution takes 9.04ms. We wait 9.5ms (9500 microseconds) to be safe.
+      if (micros() - _lastRequestTime > 9500) {
+        _D1 = readADC(); // Pick up the data
+        
+        // Immediately ask for Raw Temperature (D2)
+        SPI1.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+        digitalWrite(_csPin, LOW);
+        SPI1.transfer(0x58); // 0x58 = Convert D2 (OSR=4096)
+        digitalWrite(_csPin, HIGH);
+        SPI1.endTransaction();
+        
+        _lastRequestTime = micros();
+        _state = 2; 
+      }
+      return false; // D2 data not ready yet
+
+    case 2: // WAITING FOR D2
+      if (micros() - _lastRequestTime > 9500) {
+        _D2 = readADC(); // Read D2
+        calculateMath(); // Calculate altitude_AGL
+        updateDerivedSignals(); // compute smoothed altitude and velocity
+        _state = 0;      // Loop back to the beginning
+        return true;     // New altitude_AGL data is ready!
+      }
+      return false;
+  }
+  return false;
+}
+
+// Extract the 24-bit raw D1/D2 values from the ADC
+uint32_t Barometer::readADC() {
+  SPI1.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  SPI1.transfer(0x00); // Send ADC Read Command
+  
+  uint8_t b1 = SPI1.transfer(0x00); // Top 8 bits
+  uint8_t b2 = SPI1.transfer(0x00); // Middle 8 bits
+  uint8_t b3 = SPI1.transfer(0x00); // Bottom 8 bits
+  
+  digitalWrite(_csPin, HIGH);
+  SPI1.endTransaction();
+  
+  return ((uint32_t)b1 << 16) | ((uint32_t)b2 << 8) | b3;
+}
+
+// Calculating Temperature, temperature-compensated pressure, and altitude using the MS5611's recommended math from the datasheet
+void Barometer::calculateMath() {
+  // --- FIRST ORDER MATH ---
+  int32_t dT = _D2 - ((int32_t)C5 << 8);
+  int32_t TEMP = 2000 + (((int64_t)dT * C6) >> 23);
+  
+  int64_t OFF = ((int64_t)C2 << 16) + (((int64_t)C4 * dT) >> 7);
+  int64_t SENS = ((int64_t)C1 << 15) + (((int64_t)C3 * dT) >> 8);
+  
+  // --- SECOND ORDER TEMPERATURE COMPENSATION ---
+  int64_t T2 = 0;
+  int64_t OFF2 = 0;
+  int64_t SENS2 = 0;
+
+  if (TEMP < 2000) { // If temperature is below 20.00 C
+    T2 = ((int64_t)dT * dT) >> 31;
+    
+    int64_t tempDiff = TEMP - 2000;
+    int64_t sqDiff = tempDiff * tempDiff;
+    
+    OFF2 = (5 * sqDiff) >> 1;
+    SENS2 = (5 * sqDiff) >> 2;
+
+    if (TEMP < -1500) { // If temperature is below -15.00 C
+      int64_t deepColdDiff = TEMP + 1500;
+      int64_t deepColdSq = deepColdDiff * deepColdDiff;
+      
+      OFF2 = OFF2 + (7 * deepColdSq);
+      SENS2 = SENS2 + ((11 * deepColdSq) >> 1);
+    }
+  }
+
+  // Apply the second-order corrections
+  TEMP = TEMP - T2;
+  OFF = OFF - OFF2;
+  SENS = SENS - SENS2;
+  // ----------------------------------------------
+
+  // Final Pressure Calculation
+  int32_t P = (((_D1 * SENS) >> 21) - OFF) >> 15;
+
+  // Convert to human-readable floats
+  temp_C = TEMP / 100.0;
+  pressure_Mbar = P / 100.0;
+  
+  // Standard barometric altitude formula, calculating altitude relative to sea level.
+  altitude_MSL = 44330.76923 * (1.0 - pow((pressure_Mbar / 1013.25), 0.1902632365));
+
+  // Calculate AGL by subtracting the ground reference altitude (set at liftoff) from the current MSL altitude.
+  altitude_AGL = altitude_MSL - groundAltitude_MSL;
+}
+
+// Calibrate the barometer by averaging the current altitude over a number of samples to set the groundAltitude_MSL reference. Call this at liftoff!
+bool Barometer::calibrateBaro(int samples) {
+  // Flush first sample (initial state-machine sync)
+  unsigned long flushStart = millis();
+  while (!update()) {
+    if (millis() - flushStart > 100) return false;  // Timeout if update() doesn't return true within 100ms, likely a sensor issue. We want to fail fast here.
+  }
+
+  float sumMSL = 0.0f;
+  int validSamples = 0;
+  unsigned long calStart = millis(); // Calibration start time
+  const unsigned long maxCalTime = (unsigned long)samples * 30UL + 500UL; // Conservative Maximum Cal Time > 20 mx * update()
+
+  while (validSamples < samples) {
+    if (update()) {
+      sumMSL += altitude_MSL;
+      validSamples++;
+    }
+    if (millis() - calStart > maxCalTime) return false;  // Sensor dead
+  }
+
+  groundAltitude_MSL = sumMSL / samples;
+  return true;
+}
+
+// ============================================================
+// updateDerivedSignals
+// ============================================================
+// Called once per fresh barometer sample (~50 Hz). Maintains:
+//   1. A 10-sample moving average of altitude_AGL → smoothedAltitude_AGL
+//   2. A 10-sample-lagged finite-difference velocity → velocity_mps
+//
+// The lagged differentiation is critical: differentiating consecutive
+// samples gives ±25 m/s of noise from ±0.5m altitude noise at 20ms
+// sampling. Using a 10-sample baseline (~200ms) reduces this to ~2.5 m/s
+// at the cost of 200ms phase lag — acceptable for telemetry and apogee
+// detection, NOT acceptable for a real-time control loop.
+// ============================================================
+void Barometer::updateDerivedSignals() {
+  // --- Step 1: Maintain smoothed altitude (10-sample moving average) ---
+  _smoothSum -= _smoothBuffer[_smoothPosition];
+  _smoothBuffer[_smoothPosition] = altitude_AGL;
+  _smoothSum += altitude_AGL;
+  smoothedAltitude_AGL = _smoothSum / (float)SMOOTH_BUFFER_SIZE;
+
+  _smoothPosition++;
+  if (_smoothPosition >= SMOOTH_BUFFER_SIZE) {
+    _smoothPosition = 0;
+  }
+
+  // Track peak altitude for apogee detection downstream
+  if (smoothedAltitude_AGL > maxAltitude_AGL) {
+    maxAltitude_AGL = smoothedAltitude_AGL;
+  }
+
+  // --- Step 2: Maintain altitude history buffer for lagged differentiation ---
+  unsigned long nowMicros = micros();
+  _velAltBuffer[_velPosition]  = smoothedAltitude_AGL;
+  _velTimeBuffer[_velPosition] = nowMicros;
+
+  // --- Step 3: Compute velocity over 10-sample lag window ---
+  if (_velBufferFilled) {
+    int laggedPosition = (int)_velPosition - (int)VEL_LAG_SAMPLES;
+    if (laggedPosition < 0) {
+      laggedPosition += VEL_BUFFER_SIZE;
+    }
+
+    float deltaAlt = smoothedAltitude_AGL - _velAltBuffer[laggedPosition];
+    float deltaTimeSec = (float)(nowMicros - _velTimeBuffer[laggedPosition]) * 1.0e-6f;
+
+    if (deltaTimeSec > 0.001f) {
+      velocity_mps = deltaAlt / deltaTimeSec;
+    }
+
+    if (velocity_mps > maxVelocity_mps) {
+      maxVelocity_mps = velocity_mps;
+    }
+  }
+
+  // Advance position pointer with wraparound
+  _velPosition++;
+  if (_velPosition >= VEL_BUFFER_SIZE) {
+    _velPosition = 0;
+    _velBufferFilled = true;
+  }
+}
+
+==========================================
+FILE: src/common/Barometer.h
+==========================================
+#ifndef Barometer_H
+#define Barometer_H
+
+#include <Arduino.h>
+#include <SPI.h>
+
+class Barometer {
+  public:
+    Barometer(int csPin);
+    bool begin();
+    bool update();  // script that reads current D1/D2 values
+                    // The script's non-blocking nature allows teensy to run other commands while waiting for ADC conversions to complete.
+
+    bool calibrateBaro(int samples); // Averages the current altitude over a number of samples to set the groundAltitude_MSL reference. Call this at liftoff!
+    
+    // We will store the factory calibration variables here
+    uint16_t C1, C2, C3, C4, C5, C6;
+
+    // Human-readable flight data
+    float temp_C = 0.0f;              // Temperature in degrees Celsius
+    float pressure_Mbar = 0.0f;       // Pressure in millibars (hPa)
+    float altitude_MSL = 0.0f;        // Altitude above Mean Sea Level
+    float groundAltitude_MSL = 0.0f;  // Set by calibrateBaro() before flight; Launchpad reference altitude above Mean Sea Level, set at liftoff
+    float altitude_AGL= 0.0f;         // Live flight altitude above ground level
+
+    // ============================================================
+    // SMOOTHED & VELOCITY-DERIVED SIGNALS (added for sensor fusion)
+    // ============================================================
+    // smoothedAltitude_AGL: low-pass-filtered altitude (10-sample moving avg)
+    //                       reduces ±0.5m sensor noise to ~±0.16m.
+    // velocity_mps:         finite-difference velocity over 10-sample lag window
+    //                       (~200ms baseline at 50Hz baro rate). Trades 200ms
+    //                       phase lag for dramatically reduced noise.
+    // maxVelocity_mps:      tracked for sanity gating during sensor fusion.
+    // maxAltitude_AGL:      tracked for apogee detection downstream.
+    float smoothedAltitude_AGL = 0.0f;
+    float velocity_mps         = 0.0f;
+    float maxVelocity_mps      = 0.0f;
+    float maxAltitude_AGL      = 0.0f;
+  private:
+    int _csPin;
+    uint16_t readPROM(uint8_t cmd);
+
+    uint32_t readADC(); // Reading D1 and D2 values from the ADC
+    void calculateMath(); // Calculate temperature, and temperature compensated pressure, and altitude
+
+    // Maintains smoothed altitude and lagged-difference velocity.
+    // Called from update() when a fresh barometer sample is ready.
+    void updateDerivedSignals();
+
+    int _state = 0; 
+    unsigned long _lastRequestTime = 0;
+    uint32_t _D1 = 0; // Raw Pressure
+    uint32_t _D2 = 0; // Raw Temp
+
+    // ============================================================
+    // SMOOTHING & VELOCITY BUFFERS
+    // ============================================================
+    static constexpr uint8_t SMOOTH_BUFFER_SIZE = 10;
+    static constexpr uint8_t VEL_BUFFER_SIZE    = 30;
+    static constexpr uint8_t VEL_LAG_SAMPLES    = 10;
+
+    float _smoothBuffer[SMOOTH_BUFFER_SIZE] = {0};
+    float _smoothSum = 0.0f;
+    uint8_t _smoothPosition = 0;
+
+    float         _velAltBuffer[VEL_BUFFER_SIZE]  = {0};
+    unsigned long _velTimeBuffer[VEL_BUFFER_SIZE] = {0};
+    uint8_t _velPosition = 0;
+    bool _velBufferFilled = false;
+};
+
+#endif
+
+
+
+==========================================
+FILE: src/common/IMU.cpp
+==========================================
+#include "IMU.h"
+
+IMU::IMU(int csPin) {
+  _csPin = csPin;
+}
+
+bool IMU::begin() {
+  pinMode(_csPin, OUTPUT);
+  digitalWrite(_csPin, HIGH);
+
+  // 1. Soft Reset to clear out any bad state
+  writeRegister(0x60, 0xB0);
+  delay(20); // Give the IMU time to reboot
+
+  // Verify WHO_AM_I
+  if (readRegister(0x00) != 0x05) {
+    return false;
+  }
+
+  // Configure the IMU's registers here using writeRegister()
+  // See the Tokmas (Chinese Clone) ICM-42688-PC datasheet for the CTRL Register Bit Definitions
+  writeRegister(0x02, 0b01100000); // CTRL1: 4-wire SPI, Auto-inc ON, Big-Endian, disable INT pins
+  writeRegister(0x03, 0b00110011); // CTRL2: Disable Accel self-test, Accel at +-16g, 896.8 Hz ODR
+  writeRegister(0x04, 0b01110011); // CTRL3: Disable Gyro self-test, Gyro at +-2048dps, 896.8 Hz ODR
+  writeRegister(0x06, 0b01010101); // CTRL5: Gyro and Accel Hardware LPF enabled at set to 48.33752 Hz
+  writeRegister(0x08, 0b00000011); // CTRL7: Enable Accel and Gyro
+
+  delay(50);
+  return true;
+}
+
+void IMU::calibrateGyro(int samples) {
+  // Save and zero the current offset so we read raw bias
+  const float savedX = _gyroX_off;
+  const float savedY = _gyroY_off;
+  const float savedZ = _gyroZ_off;
+  _gyroX_off = _gyroY_off = _gyroZ_off = 0.0f;
+
+  float sumX = 0, sumY = 0, sumZ = 0;
+  for (int i = 0; i < samples; i++) {
+    update();              // Now reads truly raw (no offset subtraction)
+    sumX += gyroX;
+    sumY += gyroY;
+    sumZ += gyroZ;
+    delay(5);
+  }
+
+  _gyroX_off = sumX / (float)samples;
+  _gyroY_off = sumY / (float)samples;
+  _gyroZ_off = sumZ / (float)samples;
+}
+
+void IMU::update() {
+  // Read the 6 bytes of accel data and 6 bytes of gyro data
+  // Combine the High and Low bytes, convert to G's and Deg/s, 
+  // and store them in accelX, gyroX, etc.
+  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0)); // Can speed up to 1MHz now!
+  digitalWrite(_csPin, LOW);
+  
+  // 1. Send the starting address (0x35 for AX_L) with the READ bit (0x80) set
+  SPI.transfer(0x35 | 0x80); 
+  
+  // 2. Clock in all 12 bytes sequentially 
+  uint8_t ax_l = SPI.transfer(0x00); // 0x35
+  uint8_t ax_h = SPI.transfer(0x00); // 0x36
+  uint8_t ay_l = SPI.transfer(0x00); // 0x37
+  uint8_t ay_h = SPI.transfer(0x00); // 0x38
+  uint8_t az_l = SPI.transfer(0x00); // 0x39
+  uint8_t az_h = SPI.transfer(0x00); // 0x3A
+  
+  uint8_t gx_l = SPI.transfer(0x00); // 0x3B
+  uint8_t gx_h = SPI.transfer(0x00); // 0x3C
+  uint8_t gy_l = SPI.transfer(0x00); // 0x3D
+  uint8_t gy_h = SPI.transfer(0x00); // 0x3E
+  uint8_t gz_l = SPI.transfer(0x00); // 0x3F
+  uint8_t gz_h = SPI.transfer(0x00); // 0x40
+
+  digitalWrite(_csPin, HIGH);
+  SPI.endTransaction();
+
+  // 3. Reconstruct the 16-bit integers using bitwise math (Shift High byte left by 8, OR with Low byte)
+  // These measurements include a low-pass filter, set in IMU::begin(), at 48.33752 Hz
+  int16_t rawAccelX = (ax_h << 8) | ax_l;
+  int16_t rawAccelY = (ay_h << 8) | ay_l;
+  int16_t rawAccelZ = (az_h << 8) | az_l;
+  
+  int16_t rawGyroX = (gx_h << 8) | gx_l;
+  int16_t rawGyroY = (gy_h << 8) | gy_l;
+  int16_t rawGyroZ = (gz_h << 8) | gz_l;
+  
+  // Convert to physical units and store in public class variables
+  accelX = rawAccelX / 2048.0; // Results in Gs
+  accelY = rawAccelY / 2048.0;
+  accelZ = rawAccelZ / 2048.0;
+
+  gyroX = (rawGyroX / 16.0) - _gyroX_off;     // Results in Degrees per Second
+  gyroY = (rawGyroY / 16.0) - _gyroY_off;
+  gyroZ = (rawGyroZ / 16.0) - _gyroZ_off;
+}
+
+// Helper function to WRITE a byte to a register
+void IMU::writeRegister(uint8_t regAddress, uint8_t data) {
+  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  
+  // Send the register address (MSB is 0 for Write)
+  SPI.transfer(regAddress); 
+  
+  // Send the configuration byte
+  SPI.transfer(data);       
+  
+  digitalWrite(_csPin, HIGH);
+  SPI.endTransaction();
+}
+
+// Helper function to READ a byte from a register (to verify)
+uint8_t IMU::readRegister(uint8_t regAddress) {
+  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  
+  // Send the register address with the Read Bit (0x80) set
+  SPI.transfer(regAddress | 0x80); 
+  uint8_t response = SPI.transfer(0x00);
+  
+  digitalWrite(_csPin, HIGH);
+  SPI.endTransaction();
+  
+  return response;
+}
+
+==========================================
+FILE: src/common/HighGAccel.cpp
+==========================================
+#include "HighGAccel.h"
+
+// KX134 Register Map (From your TRM)
+#define KX134_WHO_AM_I  0x13
+#define KX134_CNTL1     0x1B
+#define KX134_CNTL2     0x1C
+#define KX134_ODCNTL    0x21
+#define KX134_XOUT_L    0x08 // Start of data registers
+
+HighGAccel::HighGAccel(int csPin) {
+  _csPin = csPin;
+}
+
+bool HighGAccel::begin() {
+  pinMode(_csPin, OUTPUT);
+  digitalWrite(_csPin, HIGH);
+
+  writeRegister(KX134_CNTL1, 0x00); // Put into Standby Mode to configure
+  delay(10); 
+
+  writeRegister(KX134_CNTL2, 0b10000000); // Software Reset
+  delay(10);
+
+  if (readRegister(KX134_WHO_AM_I) != 0x46) {
+    return false;
+  }
+
+  // 3. Set Output Data Rate (ODCNTL) to 100Hz (0x06 is 100Hz in the TRM)
+  writeRegister(KX134_ODCNTL, 0b00001010); // ODR = 800 Hz, IIR Filter is not bypassed, IIR Filter Corner Frequency is ODR/9
+
+  writeRegister(KX134_CNTL1, 0b11011000); // Standby -> Operating, High-Res, +-64g
+  
+  delay(1300); // Delay: 2 ms to 1300 ms before acceleration outputs are valid
+  return true;
+}
+
+void HighGAccel::update() {
+  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  
+  // Send the starting address with the READ bit (0x80) set
+  SPI.transfer(KX134_XOUT_L | 0x80); 
+  
+  // KX134 supports auto-increment by default, clock in all 6 bytes
+  uint8_t ax_l = SPI.transfer(0x00);
+  uint8_t ax_h = SPI.transfer(0x00);
+  uint8_t ay_l = SPI.transfer(0x00);
+  uint8_t ay_h = SPI.transfer(0x00);
+  uint8_t az_l = SPI.transfer(0x00);
+  uint8_t az_h = SPI.transfer(0x00);
+
+  digitalWrite(_csPin, HIGH);
+  SPI.endTransaction();
+
+  // Reconstruct the 16-bit signed integers (KX134 is Little-Endian)
+  int16_t rawX = (ax_h << 8) | ax_l;
+  int16_t rawY = (ay_h << 8) | ay_l;
+  int16_t rawZ = (az_h << 8) | az_l;
+
+  // Convert to real G-forces (512 LSB/g for a 64g sensor)
+  accelX = rawX / 512.0;
+  accelY = rawY / 512.0;
+  accelZ = rawZ / 512.0;
+}
+
+void HighGAccel::writeRegister(uint8_t regAddress, uint8_t data) {
+  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  SPI.transfer(regAddress); // Write does NOT have MSB set
+  SPI.transfer(data);       
+  digitalWrite(_csPin, HIGH);
+  SPI.endTransaction();
+}
+
+uint8_t HighGAccel::readRegister(uint8_t regAddress) {
+  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+  digitalWrite(_csPin, LOW);
+  SPI.transfer(regAddress | 0x80); // Read has MSB set
+  uint8_t response = SPI.transfer(0x00);
+  digitalWrite(_csPin, HIGH);
+  SPI.endTransaction();
+  return response;
+}
+
+==========================================
+FILE: src/common/BenchTool.cpp
+==========================================
+#include "BenchTool.h"
+#include "Config.h"
+
+BenchTool::BenchTool(IMU& imu, HighGAccel& highG, AccelerationSource& accelSrc, Barometer& baro)
+  : _imu(imu), _highG(highG), _accelSrc(accelSrc), _baro(baro) {
+}
+
+void BenchTool::begin() {
+  // Note: Serial.begin() is called in main setup() — we don't duplicate it here
+  // because Serial is the USB port and is shared with debug print statements.
+}
+
+void BenchTool::update() {
+  // Service streaming if active
+  if (_streaming && (millis() - _lastStreamPrintMs >= STREAM_INTERVAL_MS)) {
+    streamSensorReadings();
+    _lastStreamPrintMs = millis();
+  }
+
+  // Process any new command from USB
+  if (Serial.available() > 0) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    cmd.toUpperCase();
+    processCommand(cmd);
+  }
+}
+
+void BenchTool::processCommand(String cmd) {
+  // Any command stops streaming except STREAM_SENSORS itself
+  if (_streaming && cmd != "STREAM_SENSORS") {
+    _streaming = false;
+    Serial.println("\n>>> STREAM STOPPED");
+  }
+
+  Serial.print("\n>>> BENCH RECEIVED: ");
+  Serial.println(cmd);
+
+  if (cmd == "HELP") {
+    printHelp();
+  }
+  else if (cmd == "STREAM_SENSORS") {
+    _streaming = true;
+    _lastStreamPrintMs = 0;
+    Serial.println(">>> STREAMING SENSORS @ 20Hz. Send any command to stop.");
+    Serial.println(">>> RAW = chip frame (X/Y/Z labels)");
+    Serial.println(">>> RKT = rocket frame via accessors (axial / roll-pitch-yaw)");
+    Serial.println(">>> Compare RAW to RKT during physical tests to verify accessor signs.");
+  }
+  else if (cmd == "STOP") {
+    Serial.println(">>> Stopped.");
+  }
+  else if (cmd == "STAGE") {
+    Serial.printf(">>> Stage: %s\n", Config::Build::STAGE_NAME);
+    Serial.printf(">>> Build: %s %s\n", Config::Build::BUILD_DATE, Config::Build::BUILD_TIME);
+  }
+  else {
+    Serial.println("ERROR: UNKNOWN COMMAND. TYPE 'HELP'.");
+  }
+}
+
+void BenchTool::printHelp() {
+  Serial.println("==== BENCH DIAGNOSTIC COMMANDS ====");
+  Serial.println("  HELP            - Show this menu");
+  Serial.println("  STREAM_SENSORS  - Stream raw + rocket-frame sensor data");
+  Serial.println("  STOP            - Stop any active streaming");
+  Serial.println("  STAGE           - Report which stage firmware is loaded");
+  Serial.println("====================================");
+}
+
+void BenchTool::streamSensorReadings() {
+  Serial.printf(
+    "[%6lu] "
+    "IMU_Rkt[ax:%+6.3f g | roll:%+7.2f pitch:%+7.2f yaw:%+7.2f dps] | "
+    "KX_Rkt[ax:%+6.3f g] | "
+    "Fused:%+7.2f m/s^2 src:%s | "
+    "BARO[AGL:%+7.2f smooth:%+7.2f vel:%+6.2f m/s | maxAlt:%+7.2f T:%5.1fC P:%7.2fmbar]\n",
+    millis(),
+    _imu.axialAccelG(),
+    _imu.rollRateDps(), _imu.pitchRateDps(), _imu.yawRateDps(),
+    _highG.axialAccelG(),
+    _accelSrc.getAxialAccelMps2(),
+    _accelSrc.isUsingHighG() ? "KX134" : "IMU",
+    _baro.altitude_AGL,
+    _baro.smoothedAltitude_AGL,
+    _baro.velocity_mps,
+    _baro.maxAltitude_AGL,
+    _baro.temp_C,
+    _baro.pressure_Mbar
+  );
+}
+
+==========================================
+FILE: src/FlashMemory.h
+==========================================
+#pragma once
+#include <Arduino.h>
+#include <SPI.h>
+
+class FlashMemory {
+  public:
+    FlashMemory(int csPin);
+    
+    bool begin();
+    void readJEDEC(uint8_t &manufacturerID, uint16_t &deviceID);
+
+  private:
+    int _cs;
+    
+    // Standard SPI Flash Opcodes
+    const uint8_t CMD_JEDEC_ID = 0x9F;
+};
+
+==========================================
+FILE: src/main.cpp
+==========================================
+/*
+ExternalConn commands (bench mode, manual):
+  STREAM_SENSORS    // Continuous data for axis verification
+  CAL_GYRO          // Manual gyro calibration trigger (also useful in lab)
+  CAL_BARO          // Manual baro reference set
+  PYRO_TEST         // Manual pyro continuity check
+
+ExternalConn commands (pad mode, semi-automated):
+  PREFLIGHT         // Runs the full automated sequence:
+                    //   1. cal_gyro (3 sec)
+                    //   2. cal_baro (3 sec)
+                    //   3. read initial accel, compute tilt
+                    //   4. check tilt < 10°
+                    //   5. check pyro continuity
+                    //   6. check battery voltage
+                    //   7. report PASS/FAIL with details
+  ARM               // Allowed only if PREFLIGHT passed
+
+
+  src/
+  common/                          ← shared by both stages
+    IMU.{h,cpp}
+    HighGAccel.{h,cpp}
+    Barometer.{h,cpp}
+    AccelerationSource.{h,cpp}
+    StateEstimator.{h,cpp}
+    PyroChannel.{h,cpp}
+    ExternalConn.{h,cpp}
+    BenchTool.{h,cpp}
+    Config.h
+  flight/
+    FlightStrategy.h               ← abstract interface
+    BoosterFlightStrategy.{h,cpp}  ← booster-specific
+    SustainerFlightStrategy.{h,cpp}← sustainer-specific
+    OrientationInterlock.{h,cpp}   ← only used by sustainer
+    RateDampingController.{h,cpp}  ← only used by sustainer
+  main.cpp                         ← single entry point with #ifdef selector
+*/
+
+#include <Arduino.h>
+#include "IMU.h"
+#include "HighGAccel.h"
+#include "AccelerationSource.h"
+#include "Barometer.h"
+#include "BenchTool.h"
+#include "ExternalConn.h"
+#include "Config.h"
+// #include "BoosterFlightStrategy.h"
+// #include "SustainerFlightStrategy.h"
+
+// =============================================================================
+// STAGE SELECTION — change this define to build for booster vs sustainer
+// =============================================================================
+// FlightStrategy is scaffolded but not yet implemented. For now, stage selection
+// only affects the Config::Build constants and the startup banner. When stage-
+// specific flight logic is added, instantiate the appropriate strategy here.
+
+// #define BUILD_FOR_SUSTAINER   // or BUILD_FOR_BOOSTER
+
+// #if defined(BUILD_FOR_BOOSTER)
+//   BoosterFlightStrategy flightStrategy(/* deps */);
+//   static constexpr const char* BUILD_TARGET = "BOOSTER";
+// #elif defined(BUILD_FOR_SUSTAINER)
+//   SustainerFlightStrategy flightStrategy(/* deps */);
+//   static constexpr const char* BUILD_TARGET = "SUSTAINER";
+// #else
+//   #error "Must define BUILD_FOR_BOOSTER or BUILD_FOR_SUSTAINER"
+// #endif
+
+// Sensor objects — fill in your actual CS pins
+IMU         imu(Config::Pins::IMU_CS);
+HighGAccel  highG(Config::Pins::HIGHG_CS);
+AccelerationSource accelSrc(imu, highG);
+Barometer baro(Config::Pins::BARO_CS);
+
+// Pad-time interface (GX12 umbilical via Serial4)
+ExternalConn externalConn(Config::Pins::EXTERNAL_CONN_DETECT);
+
+// Bench-time interface (USB via Serial)
+BenchTool benchTool(imu, highG, accelSrc, baro);
+
+void setup() {
+  SPI.begin();   // SPI bus 0 — for IMU and High-G accel; ICM-42688-PC, KX134-1211
+  SPI1.begin();  // SPI bus 1 — for Barometer; MS5611-01BA03
+  Serial.begin(115200);
+  delay(500);
+
+  // Print build identification banner — appears on USB serial at boot
+  Serial.println();
+  Serial.println("==========================================");
+  Serial.printf("  PROMETHEUS AVIONICS — %s STAGE\n", Config::Build::STAGE_NAME);
+  Serial.printf("  Build: %s %s\n", Config::Build::BUILD_DATE, Config::Build::BUILD_TIME);
+  Serial.println("==========================================");
+  Serial.println();
+
+  externalConn.begin();
+  benchTool.begin();
+
+  // Initialize sensors
+  if (!imu.begin()) {
+    Serial.println("IMU init FAILED");
+    Serial4.println("IMU init FAILED");
+  }
+  if (!highG.begin()) {
+    Serial.println("HighG init FAILED");
+    Serial4.println("HighG init FAILED");
+  }
+  if (!baro.begin()) {
+    Serial.println("Baro init FAILED");
+    Serial4.println("Baro init FAILED");
+  }
+}
+
+void loop() {
+  // Update sensors first (order matters!)
+  imu.update();
+  highG.update();
+  baro.update();
+  accelSrc.update();
+
+  externalConn.update();   // Listens on Serial4 (umbilical)
+  benchTool.update();      // Listens on Serial (USB)
+
+  // Flight logic placeholder
+  if (externalConn.isConnected()) {
+    // GROUND MODE — listen for commands
+  } else {
+    // FLIGHT MODE
+    if (externalConn.isArmed) {
+      // Run sensor fusion, apogee detection, etc.
+    }
+  }
+}
+

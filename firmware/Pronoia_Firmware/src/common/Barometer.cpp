@@ -98,6 +98,7 @@ bool Barometer::update() {
       if (micros() - _lastRequestTime > 9500) {
         _D2 = readADC(); // Read D2
         calculateMath(); // Calculate altitude_AGL
+        updateDerivedSignals(); // compute smoothed altitude and velocity
         _state = 0;      // Loop back to the beginning
         return true;     // New altitude_AGL data is ready!
       }
@@ -197,4 +198,66 @@ bool Barometer::calibrateBaro(int samples) {
 
   groundAltitude_MSL = sumMSL / samples;
   return true;
+}
+
+// ============================================================
+// updateDerivedSignals
+// ============================================================
+// Called once per fresh barometer sample (~50 Hz). Maintains:
+//   1. A 10-sample moving average of altitude_AGL → smoothedAltitude_AGL
+//   2. A 10-sample-lagged finite-difference velocity → velocity_mps
+//
+// The lagged differentiation is critical: differentiating consecutive
+// samples gives ±25 m/s of noise from ±0.5m altitude noise at 20ms
+// sampling. Using a 10-sample baseline (~200ms) reduces this to ~2.5 m/s
+// at the cost of 200ms phase lag — acceptable for telemetry and apogee
+// detection, NOT acceptable for a real-time control loop.
+// ============================================================
+void Barometer::updateDerivedSignals() {
+  // --- Step 1: Maintain smoothed altitude (10-sample moving average) ---
+  _smoothAltSum -= _smoothAltBuffer[_smoothAltBufferPosition];
+  _smoothAltBuffer[_smoothAltBufferPosition] = altitude_AGL;
+  _smoothAltSum += altitude_AGL;
+  smoothedAltitude_AGL = _smoothAltSum / (float)SMOOTH_BUFFER_SIZE;
+
+  _smoothAltBufferPosition++;
+  if (_smoothAltBufferPosition >= SMOOTH_BUFFER_SIZE) {
+    _smoothAltBufferPosition = 0;
+  }
+
+  // Track peak altitude for apogee detection downstream
+  if (smoothedAltitude_AGL > maxAltitude_AGL) {
+    maxAltitude_AGL = smoothedAltitude_AGL;
+  }
+
+  // --- Step 2: Maintain altitude history buffer for lagged differentiation ---
+  unsigned long nowMicros = micros();
+  _velAltBuffer[_velBufferPosition]  = smoothedAltitude_AGL;
+  _velTimeBuffer[_velBufferPosition] = nowMicros;
+
+  // --- Step 3: Compute velocity over 10-sample lag window ---
+  if (_velBufferFilled) {
+    int laggedPosition = (int)_velBufferPosition - (int)VEL_LAG_SAMPLES;
+    if (laggedPosition < 0) {
+      laggedPosition += VEL_BUFFER_SIZE;
+    }
+
+    float deltaAlt = smoothedAltitude_AGL - _velAltBuffer[laggedPosition];
+    float deltaTimeSec = (float)(nowMicros - _velTimeBuffer[laggedPosition]) * 1.0e-6f;
+
+    if (deltaTimeSec > 0.001f) {
+      velocity_mps = deltaAlt / deltaTimeSec;
+    }
+
+    if (velocity_mps > maxVelocity_mps) {
+      maxVelocity_mps = velocity_mps;
+    }
+  }
+
+  // Advance position pointer with wraparound
+  _velBufferPosition++;
+  if (_velBufferPosition >= VEL_BUFFER_SIZE) {
+    _velBufferPosition = 0;
+    _velBufferFilled = true;
+  }
 }

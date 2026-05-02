@@ -10,6 +10,27 @@
 
 namespace Config {
 
+namespace Build {
+
+#if defined(BUILD_FOR_BOOSTER)
+  static constexpr const char* STAGE_NAME = "BOOSTER";
+  static constexpr bool IS_BOOSTER  = true;
+  static constexpr bool IS_SUSTAINER = false;
+#elif defined(BUILD_FOR_SUSTAINER)
+  static constexpr const char* STAGE_NAME = "SUSTAINER";
+  static constexpr bool IS_BOOSTER  = false;
+  static constexpr bool IS_SUSTAINER = true;
+#else
+  #error "Must define BUILD_FOR_BOOSTER or BUILD_FOR_SUSTAINER in platformio.ini"
+#endif
+
+// Build timestamp — embedded automatically by the compiler at build time.
+// Useful for verifying which firmware version is loaded when debugging.
+static constexpr const char* BUILD_DATE = __DATE__;
+static constexpr const char* BUILD_TIME = __TIME__;
+
+}
+
 // ---------- Hardware Pin Assignments ----------
 namespace Pins {
     constexpr int IMU_CS         = 10;

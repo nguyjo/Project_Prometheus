@@ -7,7 +7,6 @@ IMU::IMU(int csPin) {
 bool IMU::begin() {
   pinMode(_csPin, OUTPUT);
   digitalWrite(_csPin, HIGH);
-  SPI.begin();
 
   // 1. Soft Reset to clear out any bad state
   writeRegister(0x60, 0xB0);
