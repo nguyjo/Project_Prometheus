@@ -30,10 +30,7 @@ bool IMU::begin() {
 }
 
 void IMU::calibrateGyro(int samples) {
-  // Save and zero the current offset so we read raw bias
-  const float savedX = _gyroX_off;
-  const float savedY = _gyroY_off;
-  const float savedZ = _gyroZ_off;
+  // Zero offsets so we read truly raw values during sampling
   _gyroX_off = _gyroY_off = _gyroZ_off = 0.0f;
 
   float sumX = 0, sumY = 0, sumZ = 0;

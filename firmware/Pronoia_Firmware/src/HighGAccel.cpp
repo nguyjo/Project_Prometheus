@@ -61,6 +61,24 @@ void HighGAccel::update() {
   accelX = rawX / 512.0;
   accelY = rawY / 512.0;
   accelZ = rawZ / 512.0;
+
+  // --- Maintain a moving average on the axial accel (SparkyVT-style) ---
+  _smoothSum -= _smoothBuffer[_smoothBufferPosition];
+  _smoothBuffer[_smoothBufferPosition] = accelZ;
+  _smoothSum += accelZ;
+
+  _smoothBufferPosition++;
+  if (_smoothBufferPosition >= SMOOTH_BUFFER_SIZE) {
+    _smoothBufferPosition = 0;
+    _smoothBufferFilled = true;
+  }
+
+  if (_smoothBufferFilled) {
+    smoothedAccelZ = _smoothSum / (float)SMOOTH_BUFFER_SIZE;
+  } else {
+    // During the first 10 samples, use partial-buffer average
+    smoothedAccelZ = _smoothSum / (float)_smoothBufferPosition;
+  }
 }
 
 void HighGAccel::writeRegister(uint8_t regAddress, uint8_t data) {

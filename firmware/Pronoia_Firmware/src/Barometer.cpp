@@ -25,20 +25,6 @@ bool Barometer::begin() {
   C5 = readPROM(0xAA); // Reference Temperature
   C6 = readPROM(0xAC); // Temperature Coefficient of the Temperature
 
-  // // Check 6 Coefficients read from PROM
-  // Serial.print("Raw C1 from bus: "); 
-  // Serial.println(C1);
-  // Serial.print("Raw C2 from bus: "); 
-  // Serial.println(C2);
-  // Serial.print("Raw C3 from bus: "); 
-  // Serial.println(C3);
-  // Serial.print("Raw C4 from bus: "); 
-  // Serial.println(C4);
-  // Serial.print("Raw C5 from bus: ");
-  // Serial.println(C5);
-  // Serial.print("Raw C6 from bus: ");
-  // Serial.println(C6);
-
   // If any is Coefficient is 0 or 65535, the PROM read failed
   if (C1 == 0x0000 || C1 == 0xFFFF || C2 == 0x0000 || C2 == 0xFFFF || C3 == 0x0000 || C3 == 0xFFFF ||
       C4 == 0x0000 || C4 == 0xFFFF || C5 == 0x0000 || C5 == 0xFFFF || C6 == 0x0000 || C6 == 0xFFFF) {
@@ -99,6 +85,7 @@ bool Barometer::update() {
         _D2 = readADC(); // Read D2
         calculateMath(); // Calculate altitude_AGL
         updateDerivedSignals(); // compute smoothed altitude and velocity
+        _newSampleReady = true;
         _state = 0;      // Loop back to the beginning
         return true;     // New altitude_AGL data is ready!
       }
@@ -186,7 +173,7 @@ bool Barometer::calibrateBaro(int samples) {
   float sumMSL = 0.0f;
   int validSamples = 0;
   unsigned long calStart = millis(); // Calibration start time
-  const unsigned long maxCalTime = (unsigned long)samples * 30UL + 500UL; // Conservative Maximum Cal Time > 20 mx * update()
+  const unsigned long maxCalTime = (unsigned long)samples * 30UL + 500UL; // Conservative Maximum Cal Time > 20 ms * update()
 
   while (validSamples < samples) {
     if (update()) {
@@ -197,6 +184,7 @@ bool Barometer::calibrateBaro(int samples) {
   }
 
   groundAltitude_MSL = sumMSL / samples;
+  _newSampleReady = false; // Clear any pending flag from calibration loop
   return true;
 }
 
@@ -261,3 +249,9 @@ void Barometer::updateDerivedSignals() {
     _velBufferFilled = true;
   }
 }
+
+bool Barometer::consumeNewSampleFlag() {
+      bool flag = _newSampleReady;
+      _newSampleReady = false;
+      return flag;
+    }

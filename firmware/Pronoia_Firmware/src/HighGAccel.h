@@ -38,6 +38,19 @@ class HighGAccel {
 
   private:
     int _csPin;
+
+    // Moving average for axial acceleration (mirrors SparkyVT's highGfilter
+    // pattern from his HPR Rocket Flight code). Smooths the burst-noise floor
+    // of the KX134 without adding meaningful latency for our use case
+    // (apogee detection, peak-G capture — not real-time control).
+    static constexpr size_t SMOOTH_BUFFER_SIZE = 5;
+    float _smoothBuffer[SMOOTH_BUFFER_SIZE] = {0};
+    float _smoothSum = 0.0f;
+    uint8_t _smoothBufferPosition = 0;
+    bool _smoothBufferFilled = false;
+
+    // And in public:
+    float smoothedAccelZ = 0.0f;  // smoothed axial acceleration in g
 };
 
 #endif

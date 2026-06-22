@@ -13,6 +13,14 @@ class Barometer {
 
     bool calibrateBaro(int samples); // Averages the current altitude over a number of samples to set the groundAltitude_MSL reference. Call this at liftoff!
     
+    // ===== NEW: Sample-availability flag =====
+    // Returns true if a fresh sample has been produced since the last call.
+    // Calling this method CONSUMES the flag (resets it to false). Callers that
+    // want to inspect freshness without consuming should not use this — there
+    // is intentionally only the consuming accessor to prevent the common bug
+    // of multiple consumers each thinking they own the sample.
+    bool consumeNewSampleFlag();
+
     // We will store the factory calibration variables here
     uint16_t C1, C2, C3, C4, C5, C6;
 
@@ -68,6 +76,12 @@ class Barometer {
     unsigned long _velTimeBuffer[VEL_BUFFER_SIZE] = {0};
     uint8_t _velBufferPosition = 0;
     bool _velBufferFilled = false;
+
+    // ===== NEW: Sample-availability tracking =====
+    // Set to true inside update() when calculateMath() + updateDerivedSignals()
+    // have completed and a fresh sample is available. Consumers call
+    // consumeNewSampleFlag() to read-and-clear.
+    bool _newSampleReady = false;
 };
 
 #endif

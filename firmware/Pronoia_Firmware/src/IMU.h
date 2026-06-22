@@ -43,6 +43,13 @@ class IMU {
     inline float pitchRateDps() const  { return  gyroX; }
     inline float yawRateDps()   const  { return  gyroZ; }
 
+    // Accessors for the gyro bias offsets (after calibration).
+    // Useful for the CAL_ALL CLI to print the measured biases so the operator
+    // can sanity-check them and the log can record them.
+    inline float gyroOffsetX() const { return _gyroX_off; }
+    inline float gyroOffsetY() const { return _gyroY_off; }
+    inline float gyroOffsetZ() const { return _gyroZ_off; }
+
   private:
     int _csPin;
 
