@@ -1,9 +1,11 @@
 ﻿Column1,Pre-Flight (s),First Stage to Burnout to Stage Separation,Coast to sustainer ignition (s),sustainer burn (s),sustainer burn end to apogee - 7s (s),Total Energy (J)
 Servo Motors,3600,,5,2,7.7,15356.88
 Logic,,,,,,
-Note: Calculations do not include Pyro Channel Energy Draw.,,,,,,
-,,,,,,
-Logic Energy Draw,,,,,,
 ,,,,,,
 Battery,Amp Hours,Voltage,Total Energy (J),,,
 850 mAh battery,0.85,8.4,25704,,,
+,,,,,,
+,,,,,,
+,,,,,,
+Note:,Calculations do not include Pyro Channel Energy Draw.,,#VALUE!,,,
+,Logic Energy Draw is assumed to not take,,#VALUE!,,,
